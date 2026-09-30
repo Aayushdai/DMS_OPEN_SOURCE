@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+
+    <record id="view_warehouse_orderpoint_tree_editable_supplier_allocation"
+            model="ir.ui.view">
+        <field name="name">
+            stock.warehouse.orderpoint.list.editable.supplier.allocation
+        </field>
+        <field name="model">stock.warehouse.orderpoint</field>
+        <field name="inherit_id" ref="stock.view_warehouse_orderpoint_tree_editable"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//button[@name='action_replenish']" position="before">
+                <button name="action_open_supplier_allocation"
+                        string="Allocate Suppliers"
+                        type="object"
+                        class="o_replenish_buttons"
+                        icon="fa-users"
+                        invisible="qty_to_order &lt;= 0.0"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

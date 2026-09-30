@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+
+    <template id="onlyoffice_editor_page">
+        <html>
+            <head>
+                <title>
+                    <t t-out="file.name"/>
+                </title>
+
+                <link
+                    rel="stylesheet"
+                    href="/document_editor/static/src/css/onlyoffice_editor.css"
+                />
+
+                <script
+                    type="text/javascript"
+                    t-att-src="onlyoffice_url + '/web-apps/apps/api/documents/api.js'"
+                />
+            </head>
+
+            <body>
+
+                <header class="document-editor-header">
+                    <button
+                        type="button"
+                        id="back-to-odoo"
+                        class="back-to-odoo"
+                        t-att-data-return-url="return_url"
+                    >
+                        ← Back to Odoo
+                    </button>
+
+                    <span class="document-editor-title">
+                        <t t-out="file.name"/>
+                    </span>
+                </header>
+
+                <main
+                    id="onlyoffice-editor"
+                    class="onlyoffice-editor-container"
+                    t-att-data-config-url="config_url"
+                />
+
+                <script
+                    type="text/javascript"
+                    src="/document_editor/static/src/js/onlyoffice_editor.js"
+                />
+
+            </body>
+        </html>
+    </template>
+
+</odoo>
