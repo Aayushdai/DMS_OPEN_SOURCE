@@ -16,7 +16,7 @@
                     string="Edit with ONLYOFFICE"
                     class="oe_highlight"
                     icon="fa-pencil-square-o"
-                    invisible="not permission_write or extension != 'docx'"
+                    invisible="not permission_write or extension not in ['docx', 'xlsx', 'pptx', 'csv', 'pdf', 'md']"
                 />
 
             </xpath>
