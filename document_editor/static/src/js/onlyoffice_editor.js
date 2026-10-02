@@ -2,20 +2,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("onlyoffice-editor");
     const backButton = document.getElementById("back-to-odoo");
 
-    if (backButton) {
-        backButton.addEventListener("click", () => {
-            const returnUrl = backButton.dataset.returnUrl;
+    let docEditor = null;
 
-            console.log("Back to Odoo:", returnUrl);
-
-            if (!returnUrl) {
-                console.error("Back URL is missing.");
-                return;
-            }
-
-            window.location.href = returnUrl;
-        });
-    }
+    const getReturnUrl = () => {
+        return backButton?.dataset.returnUrl || "";
+    };
 
     if (!container) {
         return;
@@ -44,10 +35,58 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
         }
 
-        new DocsAPI.DocEditor(
+        // Make sure the events object exists.
+        config.events = config.events || {};
+
+        // Called by ONLYOFFICE after the user confirms closing.
+        config.events.onRequestClose = () => {
+            const returnUrl = getReturnUrl();
+
+            if (!returnUrl) {
+                console.error("Back URL is missing.");
+                return;
+            }
+
+            window.location.href = returnUrl;
+        };
+
+        // Enable ONLYOFFICE's own close button.
+        config.editorConfig = config.editorConfig || {};
+        config.editorConfig.customization =
+            config.editorConfig.customization || {};
+
+        config.editorConfig.customization.close = {
+            visible: true,
+            text: "Close",
+        };
+
+        // Create the editor.
+        docEditor = new DocsAPI.DocEditor(
             "onlyoffice-editor",
             config
         );
+
+        // IMPORTANT:
+        // Do not directly navigate away here.
+        // Let ONLYOFFICE check for unsaved changes first.
+        if (backButton) {
+            backButton.addEventListener("click", (event) => {
+                event.preventDefault();
+
+                const returnUrl = getReturnUrl();
+
+                if (!returnUrl) {
+                    console.error("Back URL is missing.");
+                    return;
+                }
+
+                if (docEditor) {
+                    docEditor.requestClose();
+                } else {
+                    window.location.href = returnUrl;
+                }
+            });
+        }
 
     } catch (error) {
         console.error(

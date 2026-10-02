@@ -27,7 +27,39 @@
                     'video/webm'
                 ]"
             />
-            <t t-if="readable_types.includes(props.record.data.mimetype)">
+
+            <t
+                t-set="onlyoffice_extensions"
+                t-value="[
+                    'docx',
+                    'xlsx',
+                    'pptx',
+                    'csv',
+                    'pdf',
+                    'md'
+                ]"
+            />
+
+            <t
+                t-set="filename"
+                t-value="props.record.data.display_name || ''"
+            />
+
+            <t
+                t-set="extension"
+                t-value="
+                    filename.includes('.')
+                        ? filename.split('.').pop().toLowerCase()
+                        : ''
+                "
+            />
+
+            <t
+                t-if="
+                    readable_types.includes(props.record.data.mimetype)
+                    || onlyoffice_extensions.includes(extension)
+                "
+            >
                 <button
                     class="btn btn-secondary fa fa-search preview_file"
                     data-tooltip="Preview"

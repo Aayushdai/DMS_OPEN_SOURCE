@@ -8,7 +8,7 @@ import {useService} from "@web/core/utils/hooks";
 
 const videoReadableTypes = ["x-matroska", "mp4", "webm"];
 const audioReadableTypes = ["mp3", "ogg", "wav", "aac", "mpa", "flac", "m4a"];
-
+const onlyOfficeExtensions = ["docx", "xlsx", "pptx", "csv", "pdf", "md"];
 export class FileKanbanRecord extends KanbanRecord {
     setup() {
         super.setup();
@@ -30,30 +30,42 @@ export class FileKanbanRecord extends KanbanRecord {
      * Override to open the preview upon clicking the image, if compatible.
      */
     onGlobalClick(ev) {
-        const self = this;
+    const self = this;
 
-        if (ev.target.closest(".o_kanban_dms_file_preview")) {
-            const file_type = self.props.record.data.name.split(".")[1];
-            let mimetype = "";
+    if (ev.target.closest(".o_kanban_dms_file_preview")) {
+        const filename = self.props.record.data.name || "";
+        const extension = filename.includes(".")
+            ? filename.split(".").pop().toLowerCase()
+            : "";
 
-            if (self.isVideo(file_type)) {
-                mimetype = `video/${file_type}`;
-            } else if (self.isAudio(file_type)) {
-                mimetype = "audio/mpeg";
-            } else {
-                mimetype = self.props.record.data.mimetype;
-            }
-
-            const attachment = this.store["ir.attachment"].insert({
-                id: self.props.record.data.id,
-                filename: self.props.record.data.name,
-                name: self.props.record.data.name,
-                mimetype: mimetype,
-                model_name: self.props.record.resModel,
-            });
-            this.fileViewer.open(attachment);
+        if (onlyOfficeExtensions.includes(extension)) {
+            window.location.href =
+                `/document_editor/dms/open/${self.props.record.data.id}`;
             return;
         }
-        return super.onGlobalClick(ev);
+
+        let mimetype = "";
+
+        if (self.isVideo(extension)) {
+            mimetype = `video/${extension}`;
+        } else if (self.isAudio(extension)) {
+            mimetype = "audio/mpeg";
+        } else {
+            mimetype = self.props.record.data.mimetype;
+        }
+
+        const attachment = this.store["ir.attachment"].insert({
+            id: self.props.record.data.id,
+            filename: filename,
+            name: filename,
+            mimetype: mimetype,
+            model_name: self.props.record.resModel,
+        });
+
+        this.fileViewer.open(attachment);
+        return;
     }
+
+    return super.onGlobalClick(ev);
+}
 }

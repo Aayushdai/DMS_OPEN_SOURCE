@@ -649,10 +649,11 @@ class DocumentEditorController(http.Controller):
                 # Enable real-time co-editing.
                 "coEditing": {
                     "mode": "fast",
-                    "change": True,
+                    "change": False,
                 },
 
                 "customization": {
+                    "autosave": False,
                     "forcesave": True,
                     "savetitle": True,
                 },
