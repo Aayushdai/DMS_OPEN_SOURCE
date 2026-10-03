@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const backButton = document.getElementById("back-to-odoo");
 
     let docEditor = null;
+    let hasUnsavedChanges = false;
+    let auditSent = false;
 
     const getReturnUrl = () => {
         return backButton?.dataset.returnUrl || "";
@@ -35,11 +37,73 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
         }
 
+        const sendUnsavedAudit = () => {
+            if (!hasUnsavedChanges || auditSent) {
+                return;
+            }
+
+            const auditUrl = config.unsavedAuditUrl;
+
+            if (!auditUrl) {
+                console.error(
+                    "Unsaved audit URL is missing."
+                );
+                return;
+            }
+
+            auditSent = true;
+
+            const payload = JSON.stringify({
+                event: "unsaved_edit",
+            });
+
+            const blob = new Blob(
+                [payload],
+                {
+                    type: "application/json",
+                }
+            );
+
+            const beaconSent = navigator.sendBeacon(
+                auditUrl,
+                blob
+            );
+
+            if (!beaconSent) {
+                fetch(auditUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: payload,
+                    keepalive: true,
+                }).catch((error) => {
+                    console.error(
+                        "Unsaved audit request failed:",
+                        error
+                    );
+                });
+            }
+        };
+
         // Make sure the events object exists.
         config.events = config.events || {};
 
-        // Called by ONLYOFFICE after the user confirms closing.
+        // Detect when the current user modifies the document.
+        config.events.onDocumentStateChange = (event) => {
+            hasUnsavedChanges = event.data === true;
+
+            console.log(
+                "ONLYOFFICE document changed:",
+                hasUnsavedChanges
+            );
+        };
+
+        // Called after ONLYOFFICE confirms that the editor
+        // should be closed.
         config.events.onRequestClose = () => {
+            sendUnsavedAudit();
+
             const returnUrl = getReturnUrl();
 
             if (!returnUrl) {
@@ -52,6 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Enable ONLYOFFICE's own close button.
         config.editorConfig = config.editorConfig || {};
+
         config.editorConfig.customization =
             config.editorConfig.customization || {};
 
@@ -66,8 +131,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             config
         );
 
-        // IMPORTANT:
-        // Do not directly navigate away here.
+        // Do not navigate directly.
         // Let ONLYOFFICE check for unsaved changes first.
         if (backButton) {
             backButton.addEventListener("click", (event) => {
